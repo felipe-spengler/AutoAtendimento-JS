@@ -1,0 +1,16 @@
+# Arquivos e pastas que o Git DEVE ignorar
+
+# 1. Credenciais e Variáveis de Ambiente
+server.js
+
+# 2. Pastas de Compilação do Electron (CRUCIAL!)
+dist/
+
+# 3. Dependências do Node.js
+node_modules/
+
+# 4. Logs de debug
+npm-debug.log
+
+# 5. Arquivos de sistema (se estiver no macOS)
+.DS_Store 

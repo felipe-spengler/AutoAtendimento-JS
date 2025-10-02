@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Principal</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #cabecalho {
+            height: 90px;
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            line-height: 100px;
+        }
+        #conteudo {
+            overflow-x: hidden; /* Adiciona um scroll horizontal */
+            white-space: nowrap; /* Evita que os elementos quebrem linha */
+        }
+        .quarto {
+            width: 325px;
+            height: calc(100vh - 150px); 
+            margin: 0px 10px;
+            border: 1px solid #cccccc;
+            display: inline-block;
+            text-align: center;
+            overflow: hidden; /* Para garantir que a imagem não transborde */
+        }
+        .quarto img {
+            width: 100%; /* Largura da imagem igual à largura da div .quarto */
+            height: 100%; /* Altura da imagem igual à altura da div .quarto */
+        }
+        #botaoVoltar {
+            width: 400px;
+            height: 50px;
+            color: white;
+            background-color: #000000;
+            font-size: 18px;
+            font-family: Helvetica, sans-serif;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            margin-right: 10px;
+            float: left;
+        }
+        #rodape {
+            height: 50px;
+            background-color: #6e0d36; 
+            text-align: right;
+            line-height: 50px;
+            padding-right: 20px;
+            color: #ffffff; 
+        }
+        .modal {
+            display: none; /* Inicialmente escondido */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Largura da modal */
+            text-align: center; /* Centralizar texto */
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #confirmMessage {
+            font-size: 24px; /* Aumentar o tamanho da fonte da mensagem */
+            margin-bottom: 20px; /* Espaçamento abaixo da mensagem */
+        }
+        #confirmBtn, #cancelBtn {
+            font-size: 20px; /* Aumentar o tamanho da fonte dos botões */
+            padding: 15px 30px; /* Aumentar o tamanho dos botões */
+            margin: 5px; /* Margem entre os botões */
+        }
+        .scroll-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 300px;
+            background-color: rgba(139, 0, 139, 0.5); /* Cor de fundo com opacidade */
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            line-height: 300px;
+            cursor: pointer;
+            z-index: 999;
+        }
+        #scroll-left {
+            left: 0;
+        }
+        #scroll-right {
+            right: 0;
+        }
+        #contador {
+            font-size: 12px; /* Tamanho da fonte pequeno */
+            color: white; /* Cor do texto */
+            margin-left: 10px; /* Margem ao lado do botão */
+        }
+        #modalContador {
+            font-size: 16px; /* Tamanho do contador no modal */
+            margin-top: 10px; /* Espaçamento acima do contador */
+        }
+    </style>
+</head>
+<body>
+    <div id="cabecalho"></div>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal()">&times;</span>
+            <p id="confirmMessage"></p>
+            <p id="modalContador">Retorna a tela inicial em <span id="countdown">20</span> segundos...</p>
+            <button id="confirmBtn" onclick="confirmarEscolha()">Sim</button>
+            <button id="cancelBtn" onclick="fecharModal()">Não</button>
+        </div>
+    </div>
+
+        <div id="conteudo" >
+        <p id="status"></p>
+    </div>
+    <div id="scroll-left" class="scroll-button" onclick="scrollContent(-50)">←</div>
+    <div id="scroll-right" class="scroll-button" onclick="scrollContent(50)">→</div>
+    <div id="rodape">
+        <button onclick="voltar()" id="botaoVoltar">VOLTAR</button>
+        <span id="contador">60s</span> <!-- Contador ao lado do botão VOLTAR -->
+        <span>Adicional Pessoa: R$30,00</span>
+    </div>
+    
+    <script>
+    var tempoEspera = 60000;
+    var tempoRestante = 60; // Contador de 60 segundos
+    var numeroSorteado; // Variável global para o número do quarto
+    var tipoPassado; // Variável global para o tipo do quarto
+    var countdown; // Variável para o contador do modal
+
+    // Atualiza o contador ao lado do botão "VOLTAR"
+    var contadorInterval = setInterval(function() {
+        tempoRestante--;
+        document.getElementById('contador').innerText = tempoRestante + "s";
+        
+        // Se o tempo chegar a 0, redireciona
+        if (tempoRestante <= 0) {
+            clearInterval(contadorInterval);
+            window.location.href = 'home.html';
+        }
+    }, 1500);
+    
+    // Carregar a imagem do cabeçalho
+    fetch('http://localhost:3000/imagem/cabecalho')
+        .then(response => response.json())
+        .then(data => {
+            const cabecalho = document.getElementById('cabecalho');
+            cabecalho.style.backgroundImage = `url(${data.imagem})`;
+        })
+        .catch(error => console.error('Erro ao carregar a imagem do cabeçalho:', error));
+
+    // Função para carregar os quartos disponíveis
+    fetch('http://localhost:3000/quartos')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro na rede ao buscar quartos');
+            }
+            return response.json();
+        })
+        .then(quartos => {
+            const status = document.getElementById('status');
+            status.innerText = `Número de quartos carregados: ${quartos.length}`;
+            window.quartosDisponiveis = quartos; // Armazenar quartos disponíveis globalmente
+            carregarImagens(); // Chamar a função para carregar imagens
+            
+        })
+        .catch(error => {
+            const status = document.getElementById('status');
+            status.innerText = 'Erro ao carregar a lista de quartos.';
+        });
+    function scrollContent(delta) {
+        const conteudo = document.getElementById('conteudo');
+        conteudo.scrollLeft += delta; // Mover a posição de rolagem horizontalmente
+    }
+    // Função para carregar imagens dos quartos
+    function carregarImagens() {
+        fetch('http://localhost:3000/imagensquartos')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar as imagens dos quartos');
+                }
+                return response.json();
+            })
+            .then(imagens => {
+                exibirQuartos(imagens); // Chama a função para exibir os quartos
+            })
+            .catch(error => {
+                console.error('Erro ao carregar imagens:', error);
+            });
+    }
+
+    // Função para exibir os quartos e suas imagens
+    function exibirQuartos(imagens) {
+        const conteudo = document.getElementById('conteudo');
+        conteudo.innerHTML = ''; // Limpa o conteúdo anterior
+
+        // Agrupar quartos por tipo
+        const quartosPorTipo = {};
+
+        window.quartosDisponiveis.forEach(quarto => {
+            if (!quartosPorTipo[quarto.tipoquarto]) {
+                quartosPorTipo[quarto.tipoquarto] = [];
+            }
+            quartosPorTipo[quarto.tipoquarto].push(quarto);
+        });
+
+        // Exibir apenas um quarto por tipo
+        for (const tipo in quartosPorTipo) {
+            const numeroQuarto = quartosPorTipo[tipo][0].numeroquarto; // Pega o primeiro número
+            const imagemEncontrada = imagens.find(img => img.tipoquarto === tipo);
+            const imagemBase64 = imagemEncontrada ? imagemEncontrada.imagem : ''; // Usar a imagem ou uma string vazia
+
+            const quartoDiv = document.createElement('div');
+            quartoDiv.className = 'quarto';
+            quartoDiv.onclick = () => mostrarModal(tipo); // Chamar a função ao clicar
+            quartoDiv.innerHTML = `
+                <img src="data:image/jpeg;base64,${imagemBase64}" alt="Imagem do quarto">
+            `;
+            conteudo.appendChild(quartoDiv);
+        }
+    }
+
+    function mostrarModal(tipo) {
+        const quartosDisponiveis = window.quartosDisponiveis.filter(quarto => quarto.tipoquarto === tipo);
+        const numerosDisponiveis = quartosDisponiveis.map(quarto => quarto.numeroquarto);
+        numeroSorteado = numerosDisponiveis[Math.floor(Math.random() * numerosDisponiveis.length)];
+        tipoPassado = tipo; // Definindo a variável global tipoPassado
+
+        document.getElementById('confirmMessage').innerText = `Você selecionou o quarto ${numeroSorteado} - ${tipoPassado}. Deseja confirmar?`;
+        document.getElementById('confirmModal').style.display = 'block'; // Mostrar modal de confirmação
+        
+        // Reiniciar o contador para 20 segundos
+        countdown = 20;
+        document.getElementById('countdown').innerText = countdown;
+
+        var countdownInterval = setInterval(function() {
+            countdown--;
+            document.getElementById('countdown').innerText = countdown;
+
+            // Se o tempo chegar a 0, fechar o modal e redirecionar
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                fecharModal();
+                window.location.href = 'home.html'; // Redirecionar após 20 segundos
+            }
+        }, 1000);
+    }
+
+    function fecharModal() {
+        window.location.href = 'home.html'; 
+    }
+
+    function confirmarEscolha() {
+        window.location.href = 'TelaExibicao.html?dados=' + encodeURIComponent(numeroSorteado) + '&tipoQuarto=' + encodeURIComponent(tipoPassado);
+    }
+
+    function voltar() {
+        window.location.href = 'home.html'; 
+    }
+    </script>
+</body>
+</html>

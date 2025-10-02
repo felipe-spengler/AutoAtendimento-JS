@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela de Abertura</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* Garante que o body ocupe a tela toda */
+            overflow: hidden; /* Remove qualquer barra de rolagem */
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+
+        #background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        
+        /* SOLUÇÃO: Estica a imagem 100% na largura e 100% na altura, causando distorção. */
+        background-size: 100% 100%; 
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-attachment: fixed;
+        
+        z-index: 1; 
+        cursor: pointer; 
+    }
+
+        #content {
+            text-align: center;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="background"></div>
+    <div id="content"></div>
+
+    <script>
+        // A função 'window.onload' não é necessária, pois usamos 'DOMContentLoaded'
+        /*
+        window.onload = function () {
+            const statusDiv = document.getElementById('content');
+            statusDiv.innerText = '';
+        };
+        */
+       
+        // O DOMContentLoaded garante que o HTML está pronto antes de tentar manipular os elementos.
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // 1. Lógica do FETCH: Carregar a imagem de fundo do servidor
+            fetch('http://localhost:3000/imagem/fundoAbertura')
+                .then(response => {
+                    if (!response.ok) throw new Error('Imagem não encontrada');
+                    return response.json();
+                })
+                .then(data => {
+                    const background = document.getElementById('background');
+                    // Aplica a imagem de fundo que veio do servidor
+                    background.style.backgroundImage = `url(${data.imagem})`;
+                })
+                .catch(error => console.error('Erro ao carregar a imagem:', error));
+
+            
+            // 2. Lógica do CLIQUE: Adicionar o listener de evento
+            const backgroundDiv = document.getElementById('background');
+            
+            // Adicionamos o listener de clique no elemento #background
+            backgroundDiv.addEventListener('click', function () {
+                // Redireciona para a próxima página do aplicativo
+                window.location.href = 'main.html';
+            });
+            
+            // Opcional: Limpa o div de conteúdo, caso haja algum texto inicial
+            const statusDiv = document.getElementById('content');
+            statusDiv.innerText = '';
+        });
+    </script>
+</body>
+</html>

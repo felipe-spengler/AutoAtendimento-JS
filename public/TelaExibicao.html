@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela de Abertura</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0; /* Cor de fundo padrão */
+        }
+        #background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw; /* Largura ocupando 100% da largura da tela */
+            height: 100vh; /* Altura ocupando 100% da altura da tela */
+            background-size: cover; /* Estica a imagem para cobrir toda a largura e altura do contêiner */
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: -1;
+        }
+        #content {
+            text-align: center;
+            color: #333;
+            margin-top: 150px; 
+        }
+        #rodape {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 36px;
+        }
+        #messages {
+            color: white;
+            font-size: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="background"></div>
+    <div id="content">
+        <p id="quartoInfo" style="color: white; font-family: Arial, sans-serif; font-size: 80px;"></p>
+        <div id="messages"></div> <!-- Div para mensagens de depuração -->
+    </div>
+    <div id="rodape">
+        <p style="color: white; font-size: 36px;" id="dataHora"></p>
+    </div>
+    <script>
+        // Função para adicionar mensagens de depuração
+        function addMessage(msg) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<p>${msg}</p>`;
+        }
+
+        // Função para obter parâmetros da URL
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                numeroQuarto: params.get('dados'), // Certifique-se de que a chave está correta
+                tipoQuarto: params.get('tipoQuarto')
+            };
+        }
+
+        // Função para carregar a imagem de fundo
+        function loadBackgroundImage() {
+            fetch('http://localhost:3000/imagem/direcionamento') // Ajuste a rota conforme necessário
+                .then(response => response.json())
+                .then(data => {
+                    const background = document.getElementById('background');
+                    background.style.backgroundImage = `url(${data.imagem})`;
+                    
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar a imagem:', error);
+                    addMessage('Erro ao carregar a imagem de fundo.');
+                });
+        }
+
+        // Função para obter o IP do banco de dados
+        function getIp() {
+            return fetch('http://localhost:3000/config/ip')
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao obter IP');
+                    return response.json();
+                })
+                .then(data => {
+                    return data[0].meuip; // Certifique-se de acessar o IP corretamente
+                })
+                .catch(error => {
+                    console.error(error);
+                    addMessage('Erro ao obter IP.');
+                    return null; // Retorna null em caso de erro
+                });
+        }
+
+        // Função para enviar dados ao servidor
+        function enviaDados(dados, ip) {
+            const url = `http://${ip}:1521/receberNumeroQuarto`;
+            const ch = new XMLHttpRequest();
+            ch.open("POST", url, true);
+            ch.setRequestHeader("Content-Type", "text/plain");
+            ch.onload = function () {
+                if (ch.status === 200) {
+                    
+                } else {
+                    console.error('Erro ao enviar dados:', ch.responseText);
+                    
+                }
+            };
+            ch.send(`locar ${dados}`);
+        }
+
+        // Inicializar a página
+        window.onload = async function() {
+            const params = getUrlParams();
+            const numeroQuarto = params.numeroQuarto;
+            const tipoQuarto = params.tipoQuarto;
+
+            if (numeroQuarto && tipoQuarto) {
+                document.getElementById('quartoInfo').textContent = `${numeroQuarto} - ${tipoQuarto}`;
+                const ip = await getIp(); // Obtém o IP dinamicamente
+                if (ip) {
+                    enviaDados(numeroQuarto, ip); // Enviar dados ao servidor
+                }
+            } 
+
+            loadBackgroundImage(); // Carregar a imagem de fundo
+
+            // Mostrar data e hora
+            const dataHora = new Date();
+            document.getElementById('dataHora').textContent = dataHora.toLocaleString('pt-BR');
+
+            // Espera 30 segundos antes de redirecionar
+            setTimeout(function() {
+                window.location.href = 'home.html'; // Redireciona para home.html
+            }, 30000); // 30 segundos
+        };
+    </script>
+</body>
+</html>
