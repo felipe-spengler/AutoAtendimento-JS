@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sucesso | Luxury</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         .finish-bg {
@@ -43,7 +44,7 @@
 <body>
     <div id="background" class="finish-bg"></div>
     <div class="screen">
-        <div class="success-box glass-card animate-in">
+        <div id="info-card" class="success-box glass-card animate-in">
             <p class="instruction" style="color: var(--accent-color);">Reserva Confirmada</p>
             <h1 style="font-size: 2rem; margin-top: 1rem;">DIRIJA-SE AO QUARTO</h1>
             <div id="quartoDisplay" class="quarto-numero">--</div>
@@ -55,12 +56,51 @@
             </div>
         </div>
         
-        <div id="status-msg" style="position: fixed; bottom: 40px; color: var(--text-muted); font-size: 0.8rem;">Enviando comando para o portão...</div>
+        <div id="status-msg" style="position: fixed; bottom: 40px; color: var(--text-muted); font-size: 1.1rem; background: rgba(0,0,0,0.6); padding: 12px 24px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05);">Enviando comando para o portão...</div>
     </div>
 
     <script>
         function getParams() {
             return new URLSearchParams(window.location.search);
+        }
+
+        function showFailureState(numero) {
+            const card = document.getElementById('info-card');
+            
+            // Remove success styles and add a distinct golden/orange alert style
+            card.style.borderColor = 'rgba(212, 175, 55, 0.6)';
+            card.style.boxShadow = '0 0 45px rgba(212, 175, 55, 0.25)';
+            
+            card.innerHTML = `
+                <div style="font-size: 5rem; color: var(--accent-color); margin-bottom: 2rem; animation: pulse 2s infinite;">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <h1 style="font-size: 2.5rem; margin-top: 1rem; color: var(--accent-color); letter-spacing: 0.05em;">ACIONE O INTERFONE</h1>
+                <p style="font-size: 1.4rem; color: #fff; margin-top: 1.5rem; line-height: 1.6;">
+                    Não conseguimos liberar o portão automaticamente devido a uma instabilidade de rede.
+                </p>
+                
+                <div style="margin: 2.5rem 0; padding: 2rem; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+                    <p style="font-size: 1.1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin: 0;">SUÍTE RESERVADA</p>
+                    <p style="font-size: 4rem; font-weight: 800; color: var(--accent-color); margin: 0.5rem 0 0 0; line-height: 1;">SUÍTE ${numero}</p>
+                </div>
+
+                <div style="background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.35); padding: 1.8rem; border-radius: 16px; margin-bottom: 2.5rem; box-shadow: 0 0 20px rgba(212,175,55,0.05);">
+                    <strong style="color: #fff; font-size: 1.4rem; display: block;">
+                        📞 POR FAVOR, TOQUE O INTERFONE AO LADO
+                    </strong>
+                    <span style="font-size: 1.15rem; color: var(--text-muted); display: block; margin-top: 8px; line-height: 1.4;">
+                        A recepção abrirá o portão de sua suíte manualmente agora mesmo!
+                    </span>
+                </div>
+
+                <button class="btn btn-secondary" onclick="window.location.href='home.html'" style="padding: 1.4rem 3rem; font-size: 1.2rem; font-weight: 700; width: 100%;">
+                    VOLTAR AO INÍCIO
+                </button>
+            `;
+            
+            const statusMsg = document.getElementById('status-msg');
+            if (statusMsg) statusMsg.style.display = 'none';
         }
 
         async function init() {
@@ -97,20 +137,34 @@
                         } else {
                             statusMsg.innerText = '📡 Liberado via comando remoto (MQTT).';
                         }
+                        
+                        // Redirecionamento rápido (15 segundos) em caso de sucesso
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 15000);
                     } else {
-                        statusMsg.innerHTML = '⚠️ Falha de comunicação com a recepção.<br><strong style="color: var(--accent-color); font-size: 1rem; display: block; margin-top: 5px;">Por favor, acione o interfone para liberação manual!</strong>';
+                        showFailureState(numero);
+                        
+                        // Redirecionamento lento de segurança (90 segundos) em caso de falha
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 90000);
                     }
                 } catch (err) {
                     console.error('Erro ao enviar comando:', err);
-                    statusMsg.innerHTML = '⚠️ Instabilidade na rede local.<br><strong style="color: var(--accent-color); font-size: 1rem; display: block; margin-top: 5px;">Por favor, acione o interfone para falar com a recepção!</strong>';
+                    showFailureState(numero);
+                    
+                    // Redirecionamento lento de segurança (90 segundos) em caso de falha
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 90000);
                 }
+            } else {
+                // Se não houver parâmetros válidos, volta para a home em 5 segundos
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 5000);
             }
-
-
-            // Redirect back home after 20s
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, 20000);
         }
 
         init();

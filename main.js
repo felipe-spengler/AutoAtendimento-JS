@@ -33,9 +33,9 @@ function createWindow() {
 
     // Tenta puxar atualizações do GitHub antes de iniciar o servidor e carregar a página
     try {
-        console.log("🔄 [AutoUpdate] Buscando atualizações no GitHub...");
+        console.log("🔄 [AutoUpdate] Buscando atualizações no GitHub (timeout: 6s)...");
         const { execSync } = require('child_process');
-        execSync('git pull', { stdio: 'inherit' });
+        execSync('git pull', { stdio: 'inherit', timeout: 6000 });
         console.log("✅ [AutoUpdate] Sucesso!");
     } catch (e) {
         console.error("⚠️ [AutoUpdate] Falha ao atualizar:", e.message);

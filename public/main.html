@@ -161,6 +161,28 @@
         </div>
     </div>
 
+    <!-- MODAL: OFFLINE / INSTABILIDADE -->
+    <div id="offline-modal" class="modal-overlay" style="display: none; background: rgba(5,5,5,0.98);">
+        <div class="modal-panel glass-card" style="max-width: 800px; text-align: center; border: 1px solid rgba(212, 175, 55, 0.4); padding: 5vh 4vw;">
+            <div style="font-size: 6rem; margin-bottom: 3vh; color: var(--accent-color); animation: pulse 2s infinite;">
+                <i class="fas fa-phone-alt"></i>
+            </div>
+            <h2 style="font-size: 3rem; margin-bottom: 2vh; color: var(--accent-color); letter-spacing: 0.05em;">TOTEM OFFLINE</h2>
+            <div style="font-size: 1.6rem; line-height: 1.7; margin-bottom: 4vh; color: var(--text-color);">
+                Estamos passando por uma instabilidade temporária de conexão.<br><br>
+                <strong style="color: #fff; background: rgba(212,175,55,0.15); padding: 15px 30px; border-radius: 16px; display: inline-block; border: 1px solid rgba(212,175,55,0.4); font-size: 1.8rem; box-shadow: 0 0 20px rgba(212,175,55,0.1);">
+                    📞 POR FAVOR, ACIONE O INTERFONE AO LADO
+                </strong>
+                <br><br>
+                A recepção fará a liberação imediata de sua suíte manualmente!
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.8rem; width: 100%; max-width: 400px; margin: 0 auto;">
+                <button class="btn btn-primary" style="padding: 1.4rem; font-size: 1.3rem; font-weight: bold;" onclick="retryConnection()">TENTAR NOVAMENTE</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let roomTypes = [];
         let selectedType = null;
@@ -216,6 +238,10 @@
                     fetch('/imagensquartos')
                 ]);
 
+                if (!roomsRes.ok || !imagesRes.ok) {
+                    throw new Error("Resposta inválida do servidor");
+                }
+
                 const rooms = await roomsRes.json();
                 const images = await imagesRes.json();
 
@@ -256,9 +282,32 @@
 
                 roomTypes = Object.values(groups);
                 renderRooms();
+                
+                // Fecha o modal offline se estiver aberto
+                closeModal('offline-modal');
             } catch (err) {
                 console.error('Erro na inicialização:', err);
+                showOfflineScreen();
             }
+        }
+
+        function showOfflineScreen() {
+            document.getElementById('offline-modal').style.display = 'flex';
+        }
+
+        function retryConnection() {
+            const btn = document.querySelector('#offline-modal .btn-primary');
+            if (btn) {
+                btn.innerText = "CONECTANDO...";
+                btn.disabled = true;
+            }
+            setTimeout(async () => {
+                await init();
+                if (btn) {
+                    btn.innerText = "TENTAR NOVAMENTE";
+                    btn.disabled = false;
+                }
+            }, 1000);
         }
 
         function renderRooms() {
