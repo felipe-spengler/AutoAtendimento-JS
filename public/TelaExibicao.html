@@ -98,11 +98,11 @@
                             statusMsg.innerText = '📡 Liberado via comando remoto (MQTT).';
                         }
                     } else {
-                        statusMsg.innerHTML = '⚠️ Erro ao liberar. <br>Por favor, avise a recepção se o portão não abrir.';
+                        statusMsg.innerHTML = '⚠️ Falha de comunicação com a recepção.<br><strong style="color: var(--accent-color); font-size: 1rem; display: block; margin-top: 5px;">Por favor, acione o interfone para liberação manual!</strong>';
                     }
                 } catch (err) {
                     console.error('Erro ao enviar comando:', err);
-                    document.getElementById('status-msg').innerText = 'Aviso: Falha de comunicação. A recepção foi notificada.';
+                    statusMsg.innerHTML = '⚠️ Instabilidade na rede local.<br><strong style="color: var(--accent-color); font-size: 1rem; display: block; margin-top: 5px;">Por favor, acione o interfone para falar com a recepção!</strong>';
                 }
             }
 
