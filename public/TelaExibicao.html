@@ -3,146 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tela de Abertura</title>
+    <title>Sucesso | Luxury</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0; /* Cor de fundo padrão */
-        }
-        #background {
+        .finish-bg {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw; /* Largura ocupando 100% da largura da tela */
-            height: 100vh; /* Altura ocupando 100% da altura da tela */
-            background-size: cover; /* Estica a imagem para cobrir toda a largura e altura do contêiner */
-            background-repeat: no-repeat;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
             background-position: center;
+            filter: brightness(0.3);
             z-index: -1;
         }
-        #content {
+        .success-box {
             text-align: center;
-            color: #333;
-            margin-top: 150px; 
+            padding: 4rem;
+            max-width: 800px;
         }
-        #rodape {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-size: 36px;
+        .quarto-numero {
+            font-size: 8rem;
+            font-weight: 700;
+            line-height: 1;
+            margin: 1rem 0;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        #messages {
-            color: white;
-            font-size: 20px;
-            margin-top: 20px;
+        .instruction {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
-    <div id="background"></div>
-    <div id="content">
-        <p id="quartoInfo" style="color: white; font-family: Arial, sans-serif; font-size: 80px;"></p>
-        <div id="messages"></div> <!-- Div para mensagens de depuração -->
+    <div id="background" class="finish-bg"></div>
+    <div class="screen">
+        <div class="success-box glass-card animate-in">
+            <p class="instruction" style="color: var(--accent-color);">Reserva Confirmada</p>
+            <h1 style="font-size: 2rem; margin-top: 1rem;">DIRIJA-SE AO QUARTO</h1>
+            <div id="quartoDisplay" class="quarto-numero">--</div>
+            <p id="tipoDisplay" style="font-size: 1.2rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.2em;">---</p>
+            
+            <div style="margin-top: 3rem; padding: 2rem; border-top: 1px solid var(--glass-border);">
+                <p id="periodoDisplay" style="font-weight: 700;"></p>
+                <p id="valorDisplay" style="color: var(--accent-color); font-size: 1.2rem; margin-top: 0.5rem;"></p>
+            </div>
+        </div>
+        
+        <div id="status-msg" style="position: fixed; bottom: 40px; color: var(--text-muted); font-size: 0.8rem;">Enviando comando para o portão...</div>
     </div>
-    <div id="rodape">
-        <p style="color: white; font-size: 36px;" id="dataHora"></p>
-    </div>
+
     <script>
-        // Função para adicionar mensagens de depuração
-        function addMessage(msg) {
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML += `<p>${msg}</p>`;
+        function getParams() {
+            return new URLSearchParams(window.location.search);
         }
 
-        // Função para obter parâmetros da URL
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                numeroQuarto: params.get('dados'), // Certifique-se de que a chave está correta
-                tipoQuarto: params.get('tipoQuarto')
-            };
-        }
+        async function init() {
+            const params = getParams();
+            const numero = params.get('quarto');
+            const periodo = params.get('periodo');
+            const valor = params.get('valor');
+            const desconto = params.get('desconto') || 0;
 
-        // Função para carregar a imagem de fundo
-        function loadBackgroundImage() {
-            fetch('http://localhost:3000/imagem/direcionamento') // Ajuste a rota conforme necessário
-                .then(response => response.json())
-                .then(data => {
-                    const background = document.getElementById('background');
-                    background.style.backgroundImage = `url(${data.imagem})`;
+            if (numero) {
+                document.getElementById('quartoDisplay').innerText = numero;
+                document.getElementById('periodoDisplay').innerText = `PERMANÊNCIA: ${periodo}`;
+                document.getElementById('valorDisplay').innerText = `VALOR TOTAL: R$ ${parseFloat(valor).toFixed(2)}`;
+
+                try {
+                    const statusMsg = document.getElementById('status-msg');
+                    statusMsg.innerText = 'Liberando quarto...';
+
+                    const periodoFormatado = periodo.replace(/\s+/g, '-');
+                    const comando = `locar ${numero} ${periodoFormatado} ${desconto}`;
                     
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar a imagem:', error);
-                    addMessage('Erro ao carregar a imagem de fundo.');
-                });
-        }
-
-        // Função para obter o IP do banco de dados
-        function getIp() {
-            return fetch('http://localhost:3000/config/ip')
-                .then(response => {
-                    if (!response.ok) throw new Error('Erro ao obter IP');
-                    return response.json();
-                })
-                .then(data => {
-                    return data[0].meuip; // Certifique-se de acessar o IP corretamente
-                })
-                .catch(error => {
-                    console.error(error);
-                    addMessage('Erro ao obter IP.');
-                    return null; // Retorna null em caso de erro
-                });
-        }
-
-        // Função para enviar dados ao servidor
-        function enviaDados(dados, ip) {
-            const url = `http://${ip}:1521/receberNumeroQuarto`;
-            const ch = new XMLHttpRequest();
-            ch.open("POST", url, true);
-            ch.setRequestHeader("Content-Type", "text/plain");
-            ch.onload = function () {
-                if (ch.status === 200) {
+                    console.log("Enviando comando unificado:", comando);
                     
-                } else {
-                    console.error('Erro ao enviar dados:', ch.responseText);
-                    
+                    const response = await fetch('/enviar-comando', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: comando
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.via === 'http' || result.via === 'ambos') {
+                            statusMsg.innerText = '✅ Quarto liberado com sucesso!';
+                        } else {
+                            statusMsg.innerText = '📡 Liberado via comando remoto (MQTT).';
+                        }
+                    } else {
+                        statusMsg.innerHTML = '⚠️ Erro ao liberar. <br>Por favor, avise a recepção se o portão não abrir.';
+                    }
+                } catch (err) {
+                    console.error('Erro ao enviar comando:', err);
+                    document.getElementById('status-msg').innerText = 'Aviso: Falha de comunicação. A recepção foi notificada.';
                 }
-            };
-            ch.send(`locar ${dados}`);
+            }
+
+
+            // Redirect back home after 20s
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 20000);
         }
 
-        // Inicializar a página
-        window.onload = async function() {
-            const params = getUrlParams();
-            const numeroQuarto = params.numeroQuarto;
-            const tipoQuarto = params.tipoQuarto;
-
-            if (numeroQuarto && tipoQuarto) {
-                document.getElementById('quartoInfo').textContent = `${numeroQuarto} - ${tipoQuarto}`;
-                const ip = await getIp(); // Obtém o IP dinamicamente
-                if (ip) {
-                    enviaDados(numeroQuarto, ip); // Enviar dados ao servidor
-                }
-            } 
-
-            loadBackgroundImage(); // Carregar a imagem de fundo
-
-            // Mostrar data e hora
-            const dataHora = new Date();
-            document.getElementById('dataHora').textContent = dataHora.toLocaleString('pt-BR');
-
-            // Espera 30 segundos antes de redirecionar
-            setTimeout(function() {
-                window.location.href = 'home.html'; // Redireciona para home.html
-            }, 30000); // 30 segundos
-        };
+        init();
     </script>
 </body>
-</html>
+</html>

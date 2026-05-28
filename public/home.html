@@ -2,90 +2,72 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tela de Abertura</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bem-vindo | Motel Premium</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100vh; /* Garante que o body ocupe a tela toda */
-            overflow: hidden; /* Remove qualquer barra de rolagem */
-            font-family: Arial, sans-serif;
+        .welcome-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.4);
+            z-index: -1;
+            transition: transform 10s ease;
         }
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
+        body:hover .welcome-bg {
+            transform: scale(1.1);
         }
-
-        #background {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        
-        /* SOLUÇÃO: Estica a imagem 100% na largura e 100% na altura, causando distorção. */
-        background-size: 100% 100%; 
-        
-        background-repeat: no-repeat;
-        background-position: center;
-        background-attachment: fixed;
-        
-        z-index: 1; 
-        cursor: pointer; 
-    }
-
-        #content {
+        .welcome-content {
             text-align: center;
-            color: #333;
+            z-index: 1;
+        }
+        .logo {
+            font-size: 4rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .tap-to-start {
+            font-size: 1.2rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-top: 2rem;
+            animation: breathe 2s infinite ease-in-out;
+        }
+        @keyframes breathe {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
-<body>
-    <div id="background"></div>
-    <div id="content"></div>
+<body onclick="window.location.href='main.html'">
+    <div id="background" class="welcome-bg"></div>
+    <div class="screen">
+        <div class="welcome-content animate-in">
+            <img src="logo.png" alt="Motel Intensy" style="max-width: 500px; margin-bottom: 2rem;">
+            <p style="letter-spacing: 0.3em; color: var(--text-muted); font-size: 1.2rem;">AUTOATENDIMENTO</p>
+            <div class="tap-to-start">Toque para Iniciar</div>
+        </div>
+    </div>
 
     <script>
-        // A função 'window.onload' não é necessária, pois usamos 'DOMContentLoaded'
-        /*
-        window.onload = function () {
-            const statusDiv = document.getElementById('content');
-            statusDiv.innerText = '';
-        };
-        */
-       
-        // O DOMContentLoaded garante que o HTML está pronto antes de tentar manipular os elementos.
         document.addEventListener('DOMContentLoaded', function () {
-            
-            // 1. Lógica do FETCH: Carregar a imagem de fundo do servidor
-            fetch('http://localhost:3000/imagem/fundoAbertura')
-                .then(response => {
-                    if (!response.ok) throw new Error('Imagem não encontrada');
-                    return response.json();
-                })
+            fetch('/imagem/fundoAbertura')
+                .then(response => response.json())
                 .then(data => {
-                    const background = document.getElementById('background');
-                    // Aplica a imagem de fundo que veio do servidor
-                    background.style.backgroundImage = `url(${data.imagem})`;
+                    document.getElementById('background').style.backgroundImage = `url(${data.imagem})`;
                 })
-                .catch(error => console.error('Erro ao carregar a imagem:', error));
-
-            
-            // 2. Lógica do CLIQUE: Adicionar o listener de evento
-            const backgroundDiv = document.getElementById('background');
-            
-            // Adicionamos o listener de clique no elemento #background
-            backgroundDiv.addEventListener('click', function () {
-                // Redireciona para a próxima página do aplicativo
-                window.location.href = 'main.html';
-            });
-            
-            // Opcional: Limpa o div de conteúdo, caso haja algum texto inicial
-            const statusDiv = document.getElementById('content');
-            statusDiv.innerText = '';
+                .catch(err => console.error('Erro ao carregar fundo:', err));
         });
     </script>
 </body>
