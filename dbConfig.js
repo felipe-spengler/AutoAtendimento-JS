@@ -16,9 +16,11 @@ function getDbConfig() {
         const props = {};
 
         lines.forEach(line => {
-            const [key, value] = line.split('=');
-            if (key && value) {
-                props[key.trim()] = value.trim();
+            const parts = line.split('=');
+            if (parts.length >= 2) {
+                const key = parts[0].trim();
+                const value = parts.slice(1).join('=').replace(/[\r\n]/g, '').trim();
+                props[key] = value;
             }
         });
 
@@ -40,12 +42,12 @@ function getDbConfig() {
         const match = urlToUse.match(/\/\/([^:/]+)(?::(\d+))?\/([^?]+)/);
         
         const config = {
-            host: match ? match[1] : '127.0.0.1',
+            host: match ? match[1].replace(/[\r\n]/g, '').trim() : '127.0.0.1',
             port: match && match[2] ? parseInt(match[2]) : 3306,
-            user: props['USER_DB'],
-            password: deobfuscate(props['PASS_DB']),
-            database: match ? match[3] : '',
-            filial: props['SISTEMA']
+            user: props['USER_DB'] ? props['USER_DB'].replace(/[\r\n]/g, '').trim() : '',
+            password: deobfuscate(props['PASS_DB']).replace(/[\r\n]/g, '').trim(),
+            database: match ? match[3].replace(/[\r\n]/g, '').trim() : '',
+            filial: props['SISTEMA'] ? props['SISTEMA'].replace(/[\r\n]/g, '').trim() : ''
         };
 
         console.log(`📡 Configuração carregada: Conectando em ${config.host} (Banco: ${config.database})`);

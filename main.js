@@ -26,34 +26,45 @@ function createWindow() {
         }
     });
 
-    // Aguarda o servidor iniciar antes de carregar a página
-    setTimeout(() => {
-        win.loadURL('http://localhost:3001/home.html');
-    }, 1000);
+    console.log("🔄 [AutoUpdate] Buscando atualizações no GitHub...");
+    const { exec } = require('child_process');
+    exec('git pull', { timeout: 8000 }, (error, stdout, stderr) => {
+        if (error) {
+            console.error("⚠️ [AutoUpdate] Falha ao atualizar:", error.message);
+        } else {
+            console.log("✅ [AutoUpdate] Sucesso!");
+        }
 
-    // Tenta puxar atualizações do GitHub antes de iniciar o servidor e carregar a página
-    try {
-        console.log("🔄 [AutoUpdate] Buscando atualizações no GitHub (timeout: 6s)...");
-        const { execSync } = require('child_process');
-        execSync('git pull', { stdio: 'inherit', timeout: 6000 });
-        console.log("✅ [AutoUpdate] Sucesso!");
-    } catch (e) {
-        console.error("⚠️ [AutoUpdate] Falha ao atualizar:", e.message);
-    }
+        // Iniciar o servidor Node.js junto com o Electron
+        serverProcess = spawn('node', ['server.js'], { shell: true });
 
-    // Iniciar o servidor Node.js junto com o Electron
-    serverProcess = spawn('node', ['server.js'], { shell: true });
+        let pageLoaded = false;
+        serverProcess.stdout.on('data', (data) => {
+            const output = data.toString();
+            console.log(`[Server] ${output}`);
+            
+            // Só carrega a URL se o Express estiver rodando e ainda não tiver sido carregado
+            if (!pageLoaded && output.includes('Servidor rodando em')) {
+                pageLoaded = true;
+                win.loadURL('http://localhost:3001/home.html');
+            }
+        });
 
-    serverProcess.stdout.on('data', (data) => {
-        console.log(`[Server] ${data}`);
-    });
+        serverProcess.stderr.on('data', (data) => {
+            console.error(`[Server ERROR] ${data}`);
+        });
 
-    serverProcess.stderr.on('data', (data) => {
-        console.error(`[Server ERROR] ${data}`);
-    });
+        serverProcess.on('close', (code) => {
+            console.log(`Servidor Node finalizado com código ${code}`);
+        });
 
-    serverProcess.on('close', (code) => {
-        console.log(`Servidor Node finalizado com código ${code}`);
+        // Backup de segurança: Se por qualquer motivo a frase de inicialização mudar, carrega após 4 segundos
+        setTimeout(() => {
+            if (!pageLoaded) {
+                pageLoaded = true;
+                win.loadURL('http://localhost:3001/home.html');
+            }
+        }, 4000);
     });
 }
 
